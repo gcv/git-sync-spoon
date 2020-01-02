@@ -1,0 +1,8 @@
+* Git Sync — Spoon
+
+Uses https://github.com/simonthum/git-sync.
+
+
+** fswatch integration?
+
+Needs to manually debounce somehow?
