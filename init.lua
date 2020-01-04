@@ -24,6 +24,16 @@ obj.author = "gcv"
 obj.homepage = "https://github.com/gcv/git-sync.spoon"
 obj.license = "CC0"
 
+--- Internal function used to find code location.
+local function script_path()
+    local str = debug.getinfo(2, "S").source:sub(2)
+    return str:match("(.*/)")
+end
+obj.spoonPath = script_path()
+
+--- Internal state
+obj.syncs = {}
+
 --- GitSync:init()
 --- Method
 --- Initialize GitSync.
@@ -34,6 +44,13 @@ obj.license = "CC0"
 --- Returns:
 ---  * None
 function obj:init()
+   -- read resources (script and icon images), error-check as needed
+   -- read conf file
+   -- if conf file not found, error out
+   -- if conf file is bad, error out
+   -- process conf file: for each sync, create a new sync object
+   -- if menu icon enabled, turn it on (if no syncs, show error message and icon)
+   self:start()
 end
 
 --- GitSync:start()
@@ -46,6 +63,9 @@ end
 --- Returns:
 ---  * None
 function obj:start()
+   -- loop over each sync and start its timer
+
+   obj.gitSyncActive = true
 end
 
 --- GitSync:stop()
@@ -58,6 +78,9 @@ end
 --- Returns:
 ---  * None
 function obj:stop()
+   -- loop over each sync and stop its timer
+
+   obj.gitSyncActive = false
 end
 
 return obj
