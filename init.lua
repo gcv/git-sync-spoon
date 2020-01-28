@@ -31,7 +31,22 @@ local function script_path()
 end
 obj.spoonPath = script_path()
 
+local function resolve_path(relative_path)
+   return hs.fs.pathToAbsolute(relative_path)
+end
+
+--- Objects:
+local Sync = dofile(obj.spoonPath .. "/sync.lua")
+
+--- Note:
+--- might have to do this in order to keep the timer firing as expected between sleeps
+--- myTimer = hs.timer.new(60, someFn)
+--- myTimer:start()
+
 --- Internal state
+--- FIXME: ${XDG_CONFIG_HOME:-$HOME/.config}
+obj.confFile = os.getenv("HOME") .. "/.config/GitSyncSpoon.lua"
+obj.conf = {}
 obj.syncs = {}
 
 --- GitSync:init()
@@ -44,12 +59,42 @@ obj.syncs = {}
 --- Returns:
 ---  * None
 function obj:init()
-   -- read resources (script and icon images), error-check as needed
    -- read conf file
-   -- if conf file not found, error out
-   -- if conf file is bad, error out
-   -- process conf file: for each sync, create a new sync object
-   -- if menu icon enabled, turn it on (if no syncs, show error message and icon)
+   local confFn, err = loadfile(self.confFile, "t", self.conf)
+   if confFn then
+      confFn()
+   else
+      -- FIXME: Need better error handling and reporting.
+      print(err)
+      print("failed to load")
+   end
+   -- bail out if disabled
+   if not self.conf.enabled then
+      return
+   end
+   -- read resources (script and icon images), error-check as needed
+   -- ...
+   -- process conf file: sensible defaults
+   if not self.conf.defaultInterval then
+      self.conf.defaultInterval = 600
+   end
+   if not self.conf.git then
+      self.conf.git = "/usr/bin/git"
+   else
+      self.conf.git = resolve_path(self.conf.git)
+   end
+   Sync.git = self.conf.git
+   -- process conf file: for each repo, create a new sync object
+   for idx, repo in ipairs(self.conf.repos) do
+      local path = type(repo) == "string" and repo or repo.path
+      local interval = (type(repo) == "table" and repo.interval) and repo.interval or self.conf.defaultInterval
+      self.syncs[#self.syncs+1] = Sync.new(path, resolve_path(path), interval)
+   end
+   -- if menu icon enabled, turn it on (if no repos, show error message and icon)
+   self.menu = hs.menubar.new()
+   self.menu:setIcon("/Users/kostya/Desktop/icon.png")
+   self.menu:setMenu(self.makeMenuTable)
+   -- go
    self:start()
 end
 
@@ -63,9 +108,9 @@ end
 --- Returns:
 ---  * None
 function obj:start()
+   obj.gitSyncActive = true
    -- loop over each sync and start its timer
 
-   obj.gitSyncActive = true
 end
 
 --- GitSync:stop()
@@ -78,9 +123,36 @@ end
 --- Returns:
 ---  * None
 function obj:stop()
+   obj.gitSyncActive = false
    -- loop over each sync and stop its timer
 
-   obj.gitSyncActive = false
+end
+
+--- GitSync:makeMenuTable()
+function obj:makeMenuTable()
+   local res = {}
+   res[#res+1] = { title = "-" }
+   for idx, sync in ipairs(obj.syncs) do
+      res[#res+1] = {
+         title = sync.display_path .. " (" .. sync.interval .. ")",
+         fn = function()
+            sync:go()
+         end
+      }
+   end
+   res[#res+1] = { title = "-" }
+   if obj.gitSyncActive then
+      res[#res+1] = {
+         title = "Disable",
+         fn = obj.stop
+      }
+   else
+      res[#res+1] = {
+         title = "Enable",
+         fn = obj.start
+      }
+   end
+   return res
 end
 
 return obj
