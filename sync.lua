@@ -29,6 +29,15 @@ function obj:start()
    self.message = nil
    self.timer:start()
 end
+
+function obj:pause()
+   print("pausing sync", self.display_path)
+   self.timer:stop()
+end
+
+function obj:unpause()
+   print("unpausing sync", self.display_path)
+   self.timer:start()
 end
 
 function obj:stop()

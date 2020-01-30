@@ -44,6 +44,7 @@ local Sync = dofile(obj.spoonPath .. "/sync.lua")
 obj.confFile = os.getenv("HOME") .. "/.config/GitSyncSpoon.lua"
 obj.conf = {}
 obj.syncs = {}
+obj.systemWatcher = nil
 
 --- GitSync:init()
 --- Method
@@ -128,9 +129,11 @@ end
 --- Returns:
 ---  * None
 function obj:stop()
+   obj.systemWatcher:stop()
+   for idx, sync in ipairs(obj.syncs) do
+      sync:stop()
+   end
    obj.gitSyncActive = false
-   -- loop over each sync and stop its timer
-
 end
 
 --- GitSync:makeMenuTable()
@@ -157,6 +160,19 @@ function obj:makeMenuTable()
       }
    end
    return res
+end
+
+-- GitSync:systemWatchFn()
+function obj:systemWatchFn(event)
+   if hs.caffeinate.watcher.systemWillSleep == event then
+      for idx, sync in ipairs(obj.syncs) do
+         sync:pause()
+      end
+   elseif hs.caffeinate.watcher.systemDidWake == event then
+      for idx, sync in ipairs(obj.syncs) do
+         sync:unpause()
+      end
+   end
 end
 
 return obj
