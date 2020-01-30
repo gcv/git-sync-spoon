@@ -31,10 +31,6 @@ local function script_path()
 end
 obj.spoonPath = script_path()
 
-local function resolve_path(relative_path)
-   return hs.fs.pathToAbsolute(relative_path)
-end
-
 --- Objects:
 local Sync = dofile(obj.spoonPath .. "/sync.lua")
 
@@ -81,21 +77,28 @@ function obj:init()
    if not self.conf.git then
       self.conf.git = "/usr/bin/git"
    else
-      self.conf.git = resolve_path(self.conf.git)
+      self.conf.git = hs.fs.pathToAbsolute(self.conf.git)
    end
    Sync.git = self.conf.git
    -- process conf file: for each repo, create a new sync object
    for idx, repo in ipairs(self.conf.repos) do
-      local path = type(repo) == "string" and repo or repo.path
-      local interval = (type(repo) == "table" and repo.interval) and repo.interval or self.conf.defaultInterval
-      self.syncs[#self.syncs+1] = Sync.new(path, resolve_path(path), interval)
+      local path = "string" == type(repo) and repo or repo.path
+      local interval = ("table" == type(repo) and repo.interval) and repo.interval or self.conf.defaultInterval
+      self.syncs[#self.syncs+1] = Sync.new(path, interval)
    end
-   -- if menu icon enabled, turn it on (if no repos, show error message and icon)
+   -- if menu icon enabled, turn it on (FIXME: if no repos, show error message and icon)
    self.menu = hs.menubar.new()
    self.menu:setIcon("/Users/kostya/Desktop/icon.png")
    self.menu:setMenu(self.makeMenuTable)
+   -- activate system watcher
+   self.systemWatcher = hs.caffeinate.watcher.new(
+      function(evt)
+         self:systemWatchFn(evt)
+      end
+   )
    -- go
    self:start()
+   return self
 end
 
 --- GitSync:start()
@@ -109,8 +112,10 @@ end
 ---  * None
 function obj:start()
    obj.gitSyncActive = true
-   -- loop over each sync and start its timer
-
+   for idx, sync in ipairs(obj.syncs) do
+      sync:start()
+   end
+   obj.systemWatcher:start()
 end
 
 --- GitSync:stop()
@@ -133,23 +138,22 @@ function obj:makeMenuTable()
    local res = {}
    res[#res+1] = { title = "-" }
    for idx, sync in ipairs(obj.syncs) do
-      res[#res+1] = {
-         title = sync.display_path .. " (" .. sync.interval .. ")",
-         fn = function()
-            sync:go()
-         end
-      }
+      res[#res+1] = sync:display()
    end
    res[#res+1] = { title = "-" }
    if obj.gitSyncActive then
       res[#res+1] = {
          title = "Disable",
-         fn = obj.stop
+         fn = function()
+            obj.stop()
+         end
       }
    else
       res[#res+1] = {
          title = "Enable",
-         fn = obj.start
+         fn = function()
+            obj.start()
+         end
       }
    end
    return res
