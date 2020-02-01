@@ -1,8 +1,13 @@
-* Git Sync — Spoon
+* Git Sync Spoon — a Hammerspoon
 
-Uses https://github.com/simonthum/git-sync.
+** Installation
 
 
-** fswatch integration?
 
-Needs to manually debounce somehow?
+
+** Credits
+
+- This code uses and includes the [[https://github.com/simonthum/git-sync][git-sync]] script.
+- The menu icon is derived from the [[https://git-scm.com/downloads/logos][Git logo]] by [[https://twitter.com/jasonlong][Jason Long]].
+- This would not have been possible without the [[http://www.hammerspoon.org/][Hammerspoon]] platform.
+- After spending considerable time inventing new cursewords to thank CVS and Subversion for the data losses and waste of time they have inflicted on me, my heartfelt gratitude for [[https://git-scm.com/][Git]].
