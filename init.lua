@@ -90,7 +90,7 @@ function obj:init()
    end
    -- if menu icon enabled, turn it on (FIXME: if no repos, show error message and icon)
    self.menu = hs.menubar.new()
-   self.menu:setIcon("/Users/kostya/Desktop/icon.png")
+   self.menu:setIcon(obj.spoonPath .. "/resources/menu-icon.png")
    self.menu:setMenu(self.makeMenuTable)
    -- activate system watcher
    self.systemWatcher = hs.caffeinate.watcher.new(
