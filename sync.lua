@@ -41,7 +41,7 @@ end
 
 function obj:stop()
    print("stopping sync for ", self.displayPath)
-   self.status = "stopped"
+   self:updateStatus("stopped")
    if self.timer then
       self.timer:stop()
       self.timer = nil
@@ -59,24 +59,24 @@ function obj:go()
    self.lastSync = os.time()
    local realPath = hs.fs.pathToAbsolute(self.displayPath)
    if nil == realPath then
-      self.status = "error"
+      self:updateStatus("error")
       return
    end
    -- do actual work
-   self.status = "running"
+   self:updateStatus("running")
    self.task = hs.task.new(
       self.app.conf.gitSyncScript,
       function(code, stdout, stderr)
          if 0 == code then
             print("sync successful") -- FIXME: Remove this.
             if "stopped" == savedStatus then
-               self.status = "stopped"
+               self:updateStatus("stopped")
             else
-               self.status = "ok"
+               self:updateStatus("ok")
             end
          else
             print("sync failed: " .. stdout .. stderr)
-            self.status = "error"
+            self:updateStatus("error")
          end
       end
    )
@@ -121,6 +121,11 @@ function obj:display()
          self:go()
       end
    }
+end
+
+function obj:updateStatus(newStatus)
+   self.status = newStatus
+   self.app:updateMenuIcon()
 end
 
 return obj

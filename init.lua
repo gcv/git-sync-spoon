@@ -19,7 +19,7 @@ obj.__index = obj
 
 --- Metadata
 obj.name = "GitSync"
-obj.version = "0.1" -- FIXME
+obj.version = "1.0.0beta1"
 obj.author = "gcv"
 obj.homepage = "https://github.com/gcv/git-sync.spoon"
 obj.license = "CC0"
@@ -38,7 +38,8 @@ local Sync = dofile(obj.spoonPath .. "/sync.lua")
 obj.confFile = (os.getenv("XDG_CONFIG_HOME") or (os.getenv("HOME") .. "/.config")) .. "/GitSyncSpoon.lua"
 obj.conf = {}
 obj.syncs = {}
-obj.systemWatcher = nil
+obj.active = false
+obj.watcher = nil
 
 --- GitSync:init()
 --- Method
@@ -67,7 +68,6 @@ function obj:init()
    -- configure Sync object prototype
    Sync.app = self
    -- read resources (script and icon images), error-check as needed
-   -- ...
    self.conf.gitSyncScript = obj.spoonPath .. "/resources/git-sync"
    -- process conf file: sensible defaults
    if not self.conf.interval then
@@ -90,10 +90,10 @@ function obj:init()
    end
    -- if menu icon enabled, turn it on (FIXME: if no repos, show error message and icon)
    self.menu = hs.menubar.new()
-   self.menu:setIcon(obj.spoonPath .. "/resources/menu-icon.png")
+   self:updateMenuIcon()
    self.menu:setMenu(self.makeMenuTable)
    -- activate system watcher
-   self.systemWatcher = hs.caffeinate.watcher.new(
+   self.watcher = hs.caffeinate.watcher.new(
       function(evt)
          self:systemWatchFn(evt)
       end
@@ -113,12 +113,12 @@ end
 --- Returns:
 ---  * None
 function obj:start()
-   obj.gitSyncActive = true
+   obj.active = true
    for idx, sync in ipairs(obj.syncs) do
       sync:start()
    end
-   obj.systemWatcher:start()
-   obj.menu:setIcon(obj.spoonPath .. "/resources/menu-icon.png", true)
+   obj.watcher:start()
+   obj:updateMenuIcon()
 end
 
 --- GitSync:stop()
@@ -131,15 +131,14 @@ end
 --- Returns:
 ---  * None
 function obj:stop()
-   obj.systemWatcher:stop()
+   obj.watcher:stop()
    for idx, sync in ipairs(obj.syncs) do
       sync:stop()
    end
-   obj.gitSyncActive = false
-   obj.menu:setIcon(obj.spoonPath .. "/resources/menu-icon-disabled.png", false)
+   obj.active = false
+   obj:updateMenuIcon()
 end
 
---- GitSync:makeMenuTable()
 function obj:makeMenuTable()
    local res = {}
    res[#res+1] = { title = "-" }
@@ -147,7 +146,7 @@ function obj:makeMenuTable()
       res[#res+1] = sync:display()
    end
    res[#res+1] = { title = "-" }
-   if obj.gitSyncActive then
+   if obj.active then
       res[#res+1] = {
          title = "Disable",
          fn = function()
@@ -165,7 +164,6 @@ function obj:makeMenuTable()
    return res
 end
 
--- GitSync:systemWatchFn()
 function obj:systemWatchFn(event)
    if hs.caffeinate.watcher.systemWillSleep == event then
       for idx, sync in ipairs(obj.syncs) do
@@ -175,6 +173,20 @@ function obj:systemWatchFn(event)
       for idx, sync in ipairs(obj.syncs) do
          sync:unpause()
       end
+   end
+end
+
+function obj:updateMenuIcon()
+   if not obj.active then
+      obj.menu:setIcon(obj.spoonPath .. "/resources/menu-icon-inactive.png", false)
+   else
+      for idx, sync in ipairs(obj.syncs) do
+         if "error" == sync.status then
+            obj.menu:setIcon(obj.spoonPath .. "/resources/menu-icon-error.png", false)
+            return
+         end
+      end
+      obj.menu:setIcon(obj.spoonPath .. "/resources/menu-icon.png", true)
    end
 end
 
