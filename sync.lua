@@ -1,11 +1,11 @@
 local obj = { name = "Sync" }
 obj.__index = obj
 
-function obj.new(display_path, interval)
+function obj.new(displayPath, interval)
    local self = {
-      display_path = display_path,
+      displayPath = displayPath,
       interval = interval,
-      last_sync = nil,
+      lastSync = nil,
       status = nil,
       started = nil,
       timer = nil,
@@ -16,7 +16,7 @@ function obj.new(display_path, interval)
 end
 
 function obj:start()
-   print("starting sync for ", self.display_path)
+   print("starting sync for ", self.displayPath)
    self.timer = hs.timer.new(
       self.interval,
       function()
@@ -30,17 +30,17 @@ function obj:start()
 end
 
 function obj:pause()
-   print("pausing sync", self.display_path)
+   print("pausing sync", self.displayPath)
    self.timer:stop()
 end
 
 function obj:unpause()
-   print("unpausing sync", self.display_path)
+   print("unpausing sync", self.displayPath)
    self.timer:start()
 end
 
 function obj:stop()
-   print("stopping sync for ", self.display_path)
+   print("stopping sync for ", self.displayPath)
    self.status = "stopped"
    if self.timer then
       self.timer:stop()
@@ -56,9 +56,9 @@ function obj:go()
    if "running" == savedStatus then
       return
    end
-   self.last_sync = os.time()
-   local real_path = hs.fs.pathToAbsolute(self.display_path)
-   if nil == real_path then
+   self.lastSync = os.time()
+   local realPath = hs.fs.pathToAbsolute(self.displayPath)
+   if nil == realPath then
       self.status = "error"
       return
    end
@@ -83,39 +83,39 @@ function obj:go()
    local env = self.task:environment()
    env["PATH"] = self.app.conf.gitDirectory .. ":/usr/bin:/bin"
    self.task:setEnvironment(env)
-   self.task:setWorkingDirectory(real_path)
+   self.task:setWorkingDirectory(realPath)
    self.task:start()
 end
 
 function obj:display()
    local fmt = "%H:%M:%S"
-   local res_title = ""
+   local resTitle = ""
    -- status
    if "ok" == self.status then
-      res_title = res_title .. "✓"
+      resTitle = resTitle .. "✓"
    elseif "error" == self.status then
-      res_title = res_title .. "!"
+      resTitle = resTitle .. "!"
    elseif "running" == self.status then
-      res_title = res_title .. "⟳"
+      resTitle = resTitle .. "⟳"
    elseif "stopped" == self.status then
-      res_title = res_title .. "×"
+      resTitle = resTitle .. "×"
    else
-      res_title = res_title .. "•"
+      resTitle = resTitle .. "•"
    end
    -- path
-   res_title = res_title .. " " .. self.display_path
+   resTitle = resTitle .. " " .. self.displayPath
    -- last sync
-   if self.last_sync then
-      res_title = res_title ..
-         " (last: " .. os.date(fmt, self.last_sync) ..
-         "; next: " .. os.date(fmt, self.last_sync + self.interval) .. ")"
+   if self.lastSync then
+      resTitle = resTitle ..
+         " (last: " .. os.date(fmt, self.lastSync) ..
+         "; next: " .. os.date(fmt, self.lastSync + self.interval) .. ")"
    elseif self.started then
-      res_title = res_title ..
+      resTitle = resTitle ..
          " (next: " .. os.date(fmt, self.started + self.interval) .. ")"
    end
    -- done
    return {
-      title = res_title,
+      title = resTitle,
       disabled = ("running" == self.status),
       fn = function()
          self:go()
