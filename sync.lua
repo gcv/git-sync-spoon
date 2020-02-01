@@ -65,7 +65,7 @@ function obj:go()
    -- do actual work
    self.status = "running"
    self.task = hs.task.new(
-      self.conf.gitSyncScript,
+      self.app.conf.gitSyncScript,
       function(code, stdout, stderr)
          if 0 == code then
             print("sync successful") -- FIXME: Remove this.
@@ -81,7 +81,7 @@ function obj:go()
       end
    )
    local env = self.task:environment()
-   env["PATH"] = self.conf.gitDirectory .. ":/usr/bin:/bin"
+   env["PATH"] = self.app.conf.gitDirectory .. ":/usr/bin:/bin"
    self.task:setEnvironment(env)
    self.task:setWorkingDirectory(real_path)
    self.task:start()

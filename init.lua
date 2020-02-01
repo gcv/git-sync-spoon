@@ -59,16 +59,19 @@ function obj:init()
       print(err)
       print("failed to load")
    end
-   -- bail out if disabled
-   if not self.conf.enabled then
+   -- bail out if disabled; omission equivalent to "enabled = true"
+   if nil ~= self.conf.enabled and (not self.conf.enabled) then
+      print("disabled")
       return
    end
+   -- configure Sync object prototype
+   Sync.app = self
    -- read resources (script and icon images), error-check as needed
    -- ...
    self.conf.gitSyncScript = obj.spoonPath .. "/resources/git-sync"
    -- process conf file: sensible defaults
-   if not self.conf.defaultInterval then
-      self.conf.defaultInterval = 600
+   if not self.conf.interval then
+      self.conf.interval = 600
    end
    if not self.conf.git then
       self.conf.git = "/usr/bin/git"
@@ -79,11 +82,10 @@ function obj:init()
    -- the PATH of sync task environments. basedir() would have been better, but
    -- does not appear to be available in Lua or Hammerspoon.
    self.conf.gitDirectory = (self.conf.git:match("(.*)/(.*)$"))
-   Sync.conf = self.conf
    -- process conf file: for each repo, create a new sync object
    for idx, repo in ipairs(self.conf.repos) do
       local path = "string" == type(repo) and repo or repo.path
-      local interval = ("table" == type(repo) and repo.interval) and repo.interval or self.conf.defaultInterval
+      local interval = ("table" == type(repo) and repo.interval) and repo.interval or self.conf.interval
       self.syncs[#self.syncs+1] = Sync.new(path, interval)
    end
    -- if menu icon enabled, turn it on (FIXME: if no repos, show error message and icon)
