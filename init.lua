@@ -190,16 +190,24 @@ end
 
 function obj:updateMenuIcon()
    if not obj.active then
-      obj.menu:setIcon(obj.spoonPath .. "/resources/menu-icon-inactive.png", false)
-   else
-      for idx, sync in ipairs(obj.syncs) do
-         if "error" == sync.status then
-            obj.menu:setIcon(obj.spoonPath .. "/resources/menu-icon-error.png", false)
-            return
-         end
+      if obj.menu:icon() ~= obj.menuIconInactive then
+         obj.menu:setIcon(obj.menuIconInactive, false)
       end
-      obj.menu:setIcon(obj.spoonPath .. "/resources/menu-icon.png", true)
+      return
    end
+   for idx, sync in ipairs(obj.syncs) do
+      if "error" == sync.status then
+         if obj.menu:icon() ~= obj.menuIconError then
+            obj.menu:setIcon(obj.menuIconError, false)
+         end
+         return
+      end
+   end
+   if obj.menu:icon() ~= obj.menuIconNormal then
+      obj.menu:setIcon(obj.menuIconNormal, true)
+   end
+end
+
 function obj:notify(kind, text)
    local msg = hs.notify.new(
       nil,
