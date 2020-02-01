@@ -118,6 +118,7 @@ function obj:start()
       sync:start()
    end
    obj.systemWatcher:start()
+   obj.menu:setIcon(obj.spoonPath .. "/resources/menu-icon.png", true)
 end
 
 --- GitSync:stop()
@@ -135,6 +136,7 @@ function obj:stop()
       sync:stop()
    end
    obj.gitSyncActive = false
+   obj.menu:setIcon(obj.spoonPath .. "/resources/menu-icon-disabled.png", false)
 end
 
 --- GitSync:makeMenuTable()
