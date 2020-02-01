@@ -46,6 +46,8 @@ obj.gitSyncScript = hs.image.imageFromPath(obj.spoonPath .. "/resources/git-sync
 obj.menuIconNormal = hs.image.imageFromPath(obj.spoonPath .. "/resources/menu-icon-normal.png")
 obj.menuIconError = hs.image.imageFromPath(obj.spoonPath .. "/resources/menu-icon-error.png")
 obj.menuIconInactive = hs.image.imageFromPath(obj.spoonPath .. "/resources/menu-icon-inactive.png")
+obj.notifyIconNormal = hs.image.imageFromPath(obj.spoonPath .. "/resources/notify-icon-normal.png")
+obj.notifyIconError = hs.image.imageFromPath(obj.spoonPath .. "/resources/notify-icon-error.png")
 
 --- GitSync:init()
 --- Method
@@ -92,7 +94,10 @@ function obj:init()
       local interval = ("table" == type(repo) and repo.interval) and repo.interval or self.conf.interval
       self.syncs[#self.syncs+1] = Sync.new(path, interval)
    end
-   -- if menu icon enabled, turn it on (FIXME: if no repos, show error message and icon)
+   if 0 == #self.syncs then
+      self:notify("error", "No syncs defined. Check configuration.")
+   end
+   -- set up menu icon
    self.menu = hs.menubar.new()
    self:updateMenuIcon()
    self.menu:setMenu(self.makeMenuTable)
@@ -195,6 +200,17 @@ function obj:updateMenuIcon()
       end
       obj.menu:setIcon(obj.spoonPath .. "/resources/menu-icon.png", true)
    end
+function obj:notify(kind, text)
+   local msg = hs.notify.new(
+      nil,
+      {
+         title = "GitSyncSpoon",
+         informativeText = text,
+         withdrawAfter = 0,
+         setIdImage = ("error" == kind) and obj.notifyIconError or obj.notifyIconNormal
+      }
+   )
+   msg:send()
 end
 
 return obj
