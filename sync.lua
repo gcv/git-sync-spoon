@@ -65,7 +65,7 @@ function obj:go()
    -- do actual work
    self:updateStatus("running")
    self.task = hs.task.new(
-      self.app.conf.gitSyncScript,
+      self.app.gitSyncScript,
       function(code, stdout, stderr)
          if 0 == code then
             print("sync successful") -- FIXME: Remove this.

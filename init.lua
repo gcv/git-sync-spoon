@@ -41,6 +41,12 @@ obj.syncs = {}
 obj.active = false
 obj.watcher = nil
 
+--- Resources:
+obj.gitSyncScript = hs.image.imageFromPath(obj.spoonPath .. "/resources/git-sync")
+obj.menuIconNormal = hs.image.imageFromPath(obj.spoonPath .. "/resources/menu-icon-normal.png")
+obj.menuIconError = hs.image.imageFromPath(obj.spoonPath .. "/resources/menu-icon-error.png")
+obj.menuIconInactive = hs.image.imageFromPath(obj.spoonPath .. "/resources/menu-icon-inactive.png")
+
 --- GitSync:init()
 --- Method
 --- Initialize GitSync.
@@ -67,8 +73,6 @@ function obj:init()
    end
    -- configure Sync object prototype
    Sync.app = self
-   -- read resources (script and icon images), error-check as needed
-   self.conf.gitSyncScript = obj.spoonPath .. "/resources/git-sync"
    -- process conf file: sensible defaults
    if not self.conf.interval then
       self.conf.interval = 600
@@ -165,6 +169,9 @@ function obj:makeMenuTable()
 end
 
 function obj:systemWatchFn(event)
+   if not obj.active then
+      return
+   end
    if hs.caffeinate.watcher.systemWillSleep == event then
       for idx, sync in ipairs(obj.syncs) do
          sync:pause()
