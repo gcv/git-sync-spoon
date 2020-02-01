@@ -25,23 +25,17 @@ obj.homepage = "https://github.com/gcv/git-sync.spoon"
 obj.license = "CC0"
 
 --- Internal function used to find code location.
-local function script_path()
+local function scriptPath()
     local str = debug.getinfo(2, "S").source:sub(2)
     return str:match("(.*/)")
 end
-obj.spoonPath = script_path()
+obj.spoonPath = scriptPath()
 
 --- Objects:
 local Sync = dofile(obj.spoonPath .. "/sync.lua")
 
---- Note:
---- might have to do this in order to keep the timer firing as expected between sleeps
---- myTimer = hs.timer.new(60, someFn)
---- myTimer:start()
-
---- Internal state
---- FIXME: ${XDG_CONFIG_HOME:-$HOME/.config}
-obj.confFile = os.getenv("HOME") .. "/.config/GitSyncSpoon.lua"
+--- Internal state:
+obj.confFile = (os.getenv("XDG_CONFIG_HOME") or (os.getenv("HOME") .. "/.config")) .. "/GitSyncSpoon.lua"
 obj.conf = {}
 obj.syncs = {}
 obj.systemWatcher = nil
@@ -71,6 +65,7 @@ function obj:init()
    end
    -- read resources (script and icon images), error-check as needed
    -- ...
+   self.conf.gitSyncScript = obj.spoonPath .. "/resources/git-sync"
    -- process conf file: sensible defaults
    if not self.conf.defaultInterval then
       self.conf.defaultInterval = 600
@@ -80,7 +75,11 @@ function obj:init()
    else
       self.conf.git = hs.fs.pathToAbsolute(self.conf.git)
    end
-   Sync.git = self.conf.git
+   -- XXX: Use a regex to extract directory containing git binary for adding to
+   -- the PATH of sync task environments. basedir() would have been better, but
+   -- does not appear to be available in Lua or Hammerspoon.
+   self.conf.gitDirectory = (self.conf.git:match("(.*)/(.*)$"))
+   Sync.conf = self.conf
    -- process conf file: for each repo, create a new sync object
    for idx, repo in ipairs(self.conf.repos) do
       local path = "string" == type(repo) and repo or repo.path

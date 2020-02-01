@@ -7,9 +7,9 @@ function obj.new(display_path, interval)
       interval = interval,
       last_sync = nil,
       status = nil,
-      message = nil,
       started = nil,
-      timer = nil
+      timer = nil,
+      task = nil
    }
    setmetatable(self, obj)
    return self
@@ -26,7 +26,6 @@ function obj:start()
    )
    self.started = os.time()
    self.status = nil
-   self.message = nil
    self.timer:start()
 end
 
@@ -43,7 +42,6 @@ end
 function obj:stop()
    print("stopping sync for ", self.display_path)
    self.status = "stopped"
-   self.message = "Stopped"
    if self.timer then
       self.timer:stop()
       self.timer = nil
@@ -52,35 +50,45 @@ function obj:stop()
 end
 
 function obj:go()
-   local saved_status = self.status
-   if "running" == saved_status then
+   -- savedStatus complexity is to allow running a manual sync even when the
+   -- service is stopped and go back to the same status it was in before
+   local savedStatus = self.status
+   if "running" == savedStatus then
       return
    end
    self.last_sync = os.time()
    local real_path = hs.fs.pathToAbsolute(self.display_path)
    if nil == real_path then
       self.status = "error"
-      self.message = "Not found"
       return
    end
-   self.running = true
-   self.message = "Running"
    -- do actual work
-   print("will sync " .. real_path)
-   print("using " .. self.git)
-   -- status
-   self.running = false
-   if "stopped" == saved_status then
-      self.status = "stopped"
-      self.message = "Stopped"
-   else
-      self.status = "ok"
-      self.message = nil
-   end
+   self.status = "running"
+   self.task = hs.task.new(
+      self.conf.gitSyncScript,
+      function(code, stdout, stderr)
+         if 0 == code then
+            print("sync successful") -- FIXME: Remove this.
+            if "stopped" == savedStatus then
+               self.status = "stopped"
+            else
+               self.status = "ok"
+            end
+         else
+            print("sync failed: " .. stdout .. stderr)
+            self.status = "error"
+         end
+      end
+   )
+   local env = self.task:environment()
+   env["PATH"] = self.conf.gitDirectory .. ":/usr/bin:/bin"
+   self.task:setEnvironment(env)
+   self.task:setWorkingDirectory(real_path)
+   self.task:start()
 end
 
 function obj:display()
-   local fmt = "%H:%M:%S %b %d"
+   local fmt = "%H:%M:%S"
    local res_title = ""
    -- status
    if "ok" == self.status then
@@ -105,10 +113,7 @@ function obj:display()
       res_title = res_title ..
          " (next: " .. os.date(fmt, self.started + self.interval) .. ")"
    end
-   -- extra info
-   if self.message then
-      res_title = res_title .. ": " .. self.message
-   end
+   -- done
    return {
       title = res_title,
       disabled = ("running" == self.status),
