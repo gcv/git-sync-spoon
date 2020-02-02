@@ -64,7 +64,7 @@ function obj:init()
    if confFn then
       confFn()
    else
-      print(err)
+      print("GitSyncSpoon:", err)
       obj:notify("error", "Failed to load. Missing configuration file?")
       return
    end

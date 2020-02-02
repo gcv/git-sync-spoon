@@ -16,7 +16,7 @@ function obj.new(displayPath, interval)
 end
 
 function obj:start()
-   print("starting sync for ", self.displayPath)
+   if self.app.conf.debug then print("GitSyncSpoon:", "starting sync for ", self.displayPath) end
    self.timer = hs.timer.new(
       self.interval,
       function()
@@ -30,17 +30,17 @@ function obj:start()
 end
 
 function obj:pause()
-   print("pausing sync", self.displayPath)
+   if self.app.conf.debug then print("GitSyncSpoon:", "pausing sync", self.displayPath) end
    self.timer:stop()
 end
 
 function obj:unpause()
-   print("unpausing sync", self.displayPath)
+   if self.app.conf.debug then print("GitSyncSpoon:", "unpausing sync", self.displayPath) end
    self.timer:start()
 end
 
 function obj:stop()
-   print("stopping sync for ", self.displayPath)
+   if self.app.conf.debug then print("GitSyncSpoon:", "stopping sync for ", self.displayPath) end
    self:updateStatus("stopped")
    if self.timer then
       self.timer:stop()
@@ -68,14 +68,14 @@ function obj:go()
       self.app.gitSyncScript,
       function(code, stdout, stderr)
          if 0 == code then
-            print("sync successful") -- FIXME: Remove this.
+            if self.app.conf.debug then print("GitSyncSpoon:", "sync successful") end
             if "stopped" == savedStatus then
                self:updateStatus("stopped")
             else
                self:updateStatus("ok")
             end
          else
-            print("sync failed: " .. stdout .. stderr)
+            if self.app.conf.debug then print("GitSyncSpoon:", "sync failed: " .. stdout .. stderr) end
             self:updateStatus("error")
          end
       end
