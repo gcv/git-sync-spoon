@@ -49,6 +49,36 @@ obj.menuIconInactive = hs.image.imageFromPath(obj.spoonPath .. "/resources/menu-
 obj.notifyIconNormal = hs.image.imageFromPath(obj.spoonPath .. "/resources/notify-icon-normal.png")
 obj.notifyIconError = hs.image.imageFromPath(obj.spoonPath .. "/resources/notify-icon-error.png")
 
+--- Version check:
+local versionUrl = "https://raw.githubusercontent.com/wiki/gcv/git-sync-spoon/version.txt"
+hs.http.asyncGet(
+   versionUrl,
+   nil,
+   function(status, body, resp)
+      if 200 ~= status then
+         -- whatever
+         return
+      end
+      local ver = body:gsub("[ \n]*$", "")
+      if ver ~= obj.version then
+         local n = hs.notify.new(
+            function()
+               hs.osascript.applescript("open location \"https://github.com/gcv/git-sync-spoon\"")
+            end,
+            {
+               title = "Git Sync Spoon",
+               informativeText = "New version available: " .. ver .. ".\nCurrently installed: " .. obj.version .. ".",
+               withdrawAfter = 0,
+               hasActionButton = true,
+               actionButtonTitle = "Visit Page",
+               setIdImage = obj.notifyIconNormal
+            }
+         )
+         n:send()
+      end
+   end
+)
+
 --- GitSync:init()
 --- Method
 --- Initialize GitSync.
@@ -212,7 +242,7 @@ function obj:notify(kind, text)
    local msg = hs.notify.new(
       nil,
       {
-         title = "GitSyncSpoon",
+         title = "Git Sync Spoon",
          informativeText = text,
          withdrawAfter = 0,
          setIdImage = ("error" == kind) and obj.notifyIconError or obj.notifyIconNormal
