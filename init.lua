@@ -42,7 +42,7 @@ obj.active = false
 obj.watcher = nil
 
 --- Resources:
-obj.gitSyncScript = hs.image.imageFromPath(obj.spoonPath .. "/resources/git-sync")
+obj.gitSyncScript = obj.spoonPath .. "/resources/git-sync"
 obj.menuIconNormal = hs.image.imageFromPath(obj.spoonPath .. "/resources/menu-icon-normal.png")
 obj.menuIconError = hs.image.imageFromPath(obj.spoonPath .. "/resources/menu-icon-error.png")
 obj.menuIconInactive = hs.image.imageFromPath(obj.spoonPath .. "/resources/menu-icon-inactive.png")
