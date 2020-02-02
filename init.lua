@@ -49,36 +49,6 @@ obj.menuIconInactive = hs.image.imageFromPath(obj.spoonPath .. "/resources/menu-
 obj.notifyIconNormal = hs.image.imageFromPath(obj.spoonPath .. "/resources/notify-icon-normal.png")
 obj.notifyIconError = hs.image.imageFromPath(obj.spoonPath .. "/resources/notify-icon-error.png")
 
---- Version check:
-local versionUrl = "https://raw.githubusercontent.com/wiki/gcv/git-sync-spoon/version.txt"
-hs.http.asyncGet(
-   versionUrl,
-   nil,
-   function(status, body, resp)
-      if 200 ~= status then
-         -- whatever
-         return
-      end
-      local ver = body:gsub("[ \n]*$", "")
-      if ver ~= obj.version then
-         local n = hs.notify.new(
-            function()
-               hs.osascript.applescript("open location \"https://github.com/gcv/git-sync-spoon\"")
-            end,
-            {
-               title = "Git Sync Spoon",
-               informativeText = "New version available: " .. ver .. ".\nCurrently installed: " .. obj.version .. ".",
-               withdrawAfter = 0,
-               hasActionButton = true,
-               actionButtonTitle = "Visit Page",
-               setIdImage = obj.notifyIconNormal
-            }
-         )
-         n:send()
-      end
-   end
-)
-
 --- GitSync:init()
 --- Method
 --- Initialize GitSync.
@@ -94,15 +64,16 @@ function obj:init()
    if confFn then
       confFn()
    else
-      -- FIXME: Need better error handling and reporting.
       print(err)
-      print("failed to load")
+      obj:notify("error", "Failed to load. Missing configuration file?")
+      return
    end
    -- bail out if disabled; omission equivalent to "enabled = true"
    if nil ~= self.conf.enabled and (not self.conf.enabled) then
-      print("disabled")
       return
    end
+   -- version check
+   self:versionCheck()
    -- configure Sync object prototype
    Sync.app = self
    -- process conf file: sensible defaults
@@ -113,6 +84,9 @@ function obj:init()
       self.conf.git = "/usr/bin/git"
    else
       self.conf.git = hs.fs.pathToAbsolute(self.conf.git)
+   end
+   if not self.conf.debug then
+      self.conf.debug = false
    end
    -- XXX: Use a regex to extract directory containing git binary for adding to
    -- the PATH of sync task environments. basedir() would have been better, but
@@ -249,6 +223,37 @@ function obj:notify(kind, text)
       }
    )
    msg:send()
+end
+
+function obj:versionCheck()
+   local versionUrl = "https://raw.githubusercontent.com/wiki/gcv/git-sync-spoon/version.txt"
+   hs.http.asyncGet(
+      versionUrl,
+      nil,
+      function(status, body, resp)
+         if 200 ~= status then
+            -- whatever
+            return
+         end
+         local ver = body:gsub("[ \n]*$", "")
+         if ver ~= obj.version then
+            local n = hs.notify.new(
+               function()
+                  hs.osascript.applescript("open location \"https://github.com/gcv/git-sync-spoon\"")
+               end,
+               {
+                  title = "Git Sync Spoon",
+                  informativeText = "New version available: " .. ver .. ".\nCurrently installed: " .. obj.version .. ".",
+                  withdrawAfter = 0,
+                  hasActionButton = true,
+                  actionButtonTitle = "Visit Page",
+                  setIdImage = obj.notifyIconNormal
+               }
+            )
+            n:send()
+         end
+      end
+   )
 end
 
 return obj
