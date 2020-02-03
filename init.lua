@@ -12,7 +12,7 @@
 --- This is intended as a private, Git-backed replacement for synchronization
 --- services like Dropbox and Syncthing.
 ---
---- Download: FIXME
+--- Download: https://github.com/gcv/git-sync-spoon/releases/download/1.0.0beta1/GitSync.spoon.zip
 
 local obj = {}
 obj.__index = obj
