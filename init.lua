@@ -82,8 +82,6 @@ function obj:init()
    end
    if not self.conf.git then
       self.conf.git = "/usr/bin/git"
-   else
-      self.conf.git = hs.fs.pathToAbsolute(self.conf.git)
    end
    if not self.conf.debug then
       self.conf.debug = false
@@ -91,7 +89,7 @@ function obj:init()
    -- XXX: Use a regex to extract directory containing git binary for adding to
    -- the PATH of sync task environments. basedir() would have been better, but
    -- does not appear to be available in Lua or Hammerspoon.
-   self.conf.gitDirectory = (self.conf.git:match("(.*)/(.*)$"))
+   self.conf.gitDirectory = hs.fs.pathToAbsolute((self.conf.git:match("(.*)/(.*)$")))
    -- process conf file: for each repo, create a new sync object
    for idx, repo in ipairs(self.conf.repos) do
       local path = "string" == type(repo) and repo or repo.path
