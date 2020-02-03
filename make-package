@@ -20,7 +20,7 @@ mv .GitSync.spoon GitSync.spoon
 zip -9 --exclude "GitSync.spoon/make-package" -r GitSync.spoon.zip GitSync.spoon
 rm -rf GitSync.spoon
 
-echo "\n"
+echo ""
 echo "- bump the version number in init.lua in obj.version AND Download header"
 echo "- upload the zip file to GitHub releases area"
 echo "- update git-sync-spoon.wiki/version.txt"
