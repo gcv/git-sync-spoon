@@ -1,7 +1,7 @@
 --- === Git Sync ===
 ---
---- Orchestrates automatic synchronization of a local Git repository with a
---- remote one. See https://github.com/simonthum/git-sync for details of the
+--- Orchestrates automatic synchronization of local Git repositories with their
+--- remotes. See https://github.com/simonthum/git-sync for details of the
 --- underlying script. This Spoon provides a convenient wrapper for git-sync
 --- with the following features:
 ---
