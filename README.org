@@ -67,9 +67,9 @@ A more complete configuration file looks like this:
 #+BEGIN_SRC lua
 -- default settings:
 enabled = true
-debug = false -- when true, print messages to the Hammerspoon console
-git = "/usr/bin/git" -- for Nix users: "~/.nix-profile/bin/git"
-interval = 300 -- seconds
+debug = false          -- when true, print messages to the Hammerspoon console
+git = "/usr/bin/git"   -- for Nix users: "~/.nix-profile/bin/git"
+interval = 300         -- default number of seconds between syncs
 
 -- repos is a Lua table consisting of either (1) strings indicating repository
 -- paths, or (2) tables consisting of finer-grained repository configuration.
