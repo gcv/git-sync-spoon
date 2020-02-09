@@ -247,7 +247,7 @@ function obj:versionCheck()
          if ver ~= obj.version then
             local n = hs.notify.new(
                function()
-                  hs.osascript.applescript("open location \"https://github.com/gcv/git-sync-spoon\"")
+                  hs.osascript.applescript("open location \"https://github.com/gcv/git-sync-spoon/releases\"")
                end,
                {
                   title = "Git Sync Spoon",
