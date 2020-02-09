@@ -94,7 +94,17 @@ function obj:init()
    for idx, repo in ipairs(self.conf.repos) do
       local path = "string" == type(repo) and repo or repo.path
       local interval = ("table" == type(repo) and repo.interval) and repo.interval or self.conf.interval
-      self.syncs[#self.syncs+1] = Sync.new(path, interval)
+      local excludes = ""
+      if "table" == type(repo) and repo.excludes then
+         if "table" == type(repo.excludes) then
+            -- join excludes using the bell character \a, since it's unlikely to
+            -- be used in file names, and both Lua and bash can handle it
+            excludes = table.concat(repo.excludes, "\a")
+         else
+            excludes = repo.excludes
+         end
+      end
+      self.syncs[#self.syncs+1] = Sync.new(path, interval, excludes)
    end
    if 0 == #self.syncs then
       self:notify("error", "No syncs defined. Check configuration.")
